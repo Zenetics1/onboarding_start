@@ -24,6 +24,13 @@ module tt_um_uwasic_onboarding_William_Kim (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 
+    spi_peripheral spi_peripheral_inst (
+      .COPI(un_in[1]),
+      .nCS(un_in[2]),
+      .SCLK(un_in[0]),
+
+    )
+
     pwm_peripheral pwm_peripheral_inst (
       .clk(clk),
       .rst(rst_n),
