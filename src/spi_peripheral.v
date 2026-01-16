@@ -18,6 +18,8 @@ module spi_peripheral(
     wire [6:0] ADDR; //Address of register
     wire [7:0] DATA; //Serial Data
     
+    wire transaction_ready;
+
     //Transaction Register Selector
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
@@ -40,4 +42,59 @@ module spi_peripheral(
             end
         end
     end
+
+    //Flip-flops for double sync chain
+    reg COPI_sync1, COPI_sync2;
+    reg nCS_sync1, nCS_sync2;
+    reg SCLK_sync1, SCLK_sync2;
+
+    //double sync chain to clk domain
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n) begin
+            COPI_sync1 <= 1'b0; COPI_sync2 <= 1'b0;
+            nCS_sync1 <= 1'b1; nCS_sync2 <= 1'b1;
+            SCLK_sync1 <= 1'b0; SCLK_sync2 <= 1'b0;
+        end else begin
+            COPI_sync1 <= COPI;
+            COPI_sync2 <= COPI_sync1;
+
+            nCS_sync1 <= nCS;
+            nCS_sync2 <= nCS_sync1;
+
+            SCLK_sync1 <= SCLK;
+            SCLK_sync2 <= SCLK_sync1;
+        end
+    end
+
+    wire nCS_rising_edge;
+    wire nCS_falling_edge;
+    wire SCLK_rising_edge;
+    
+    //Edge detection for nCS and SCLK
+    assign SCLK_rising_edge = SCLK_sync2 & ~SCLK_sync1;
+    assign nCS_rising_edge = nCS_sync2 & ~nCS_sync2;
+    assign nCS_falling_edge = ~nCS_sync2 & nCS_sync1;
+
+    reg [3:0] counter;
+    //Cycle Counter
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n) begin
+            counter <= 4'b0;
+            transaction_ready <= 1'b0;
+        end else if(!nCS_sync2 && SCLK_rising_edge) begin
+            if(counter == 4'd15) begin
+                transaction_ready <= 1'b1;
+                counter <= 4'b0;
+            end else begin
+                transaction_ready <= 1'b0;
+                counter <= counter + 4'd1;
+            end
+        end else begin
+            transaction_ready <= 1'b0;
+            counter <= 4'b0;
+        end
+    end
+
+    reg [15:0] register_shifter;
+    //TODO: build register shifter
 endmodule
