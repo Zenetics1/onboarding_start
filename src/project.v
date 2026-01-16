@@ -25,9 +25,16 @@ module tt_um_uwasic_onboarding_William_Kim (
     input  wire       rst_n     // reset_n - low to reset
 
     spi_peripheral spi_peripheral_inst (
-      .COPI(un_in[1]),
-      .nCS(un_in[2]),
-      .SCLK(un_in[0]),
+      .COPI(ui_in[1]),
+      .nCS(ui_in[2]),
+      .SCLK(ui_in[0]),
+      .clk(clk),
+      .rst_n(rst_n),
+      .EN_OUT_7_0(en_reg_out_7_0),
+      .EN_OUT_15_8(en_reg_out_15_8),
+      .EN_PWM_MODE_7_0(en_reg_pwm_7_0),
+      .EN_PWM_MODE_15_8(en_reg_pwm_15_8),
+      .PWM_DUTY_CYCLE_7_0(pwn_duty_cycle),
 
     )
 
