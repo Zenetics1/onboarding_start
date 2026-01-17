@@ -3,8 +3,8 @@
 module spi_peripheral(
 
     //COPI:Raw Serial Data, nCS: Chip Select (Active low), SCLK: system clock for synchronization
-    input wire COPI, nCS, SCLK,
-    input wire rst_n, clk,
+    input wire COPI, nCS, SCLK
+    input wire rst_n, clk
 
     output reg[7:0] EN_OUT_7_0,
     output reg[15:8] EN_OUT_15_8,
@@ -24,7 +24,7 @@ module spi_peripheral(
             EN_PWM_MODE_15_8 <= 8'h00;
             PWM_DUTY_CYCLE_7_0 <= 8'h00;
         end else begin
-            if(transaction_ready && RW_BIT) begin
+            if(transaction_ready && RW_BIT == 1) begin
                 case (ADDR)
                     7'h00: EN_OUT_7_0 <= DATA; 
                     7'h01: EN_OUT_15_8 <= DATA;
@@ -66,9 +66,9 @@ module spi_peripheral(
     wire SCLK_rising_edge;
     
     //Edge detection for nCS and SCLK
-    assign SCLK_rising_edge = SCLK_sync2 & ~SCLK_sync1;
-    assign nCS_rising_edge = nCS_sync2 & ~nCS_sync1;
-    assign nCS_falling_edge = ~nCS_sync2 & nCS_sync1;
+    assign SCLK_rising_edge = SCLK_sync1 & ~SCLK_sync2;
+    assign nCS_rising_edge = nCS_sync1 & ~nCS_sync2;
+    assign nCS_falling_edge = ~nCS_sync1 & nCS_sync2;
 
 
     reg [3:0] counter;
@@ -91,6 +91,7 @@ module spi_peripheral(
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             shift_reg <= 16'b0;
+            counter <= 4'b0;
         end else begin
             if(nCS_falling_edge) begin
                 shift_reg <= 16'b0;
