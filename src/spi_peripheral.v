@@ -10,10 +10,10 @@ module spi_peripheral(
     output reg[15:8] EN_OUT_15_8,
     output reg[7:0] EN_PWM_MODE_7_0,
     output reg[15:8] EN_PWM_MODE_15_8, 
-    output reg[7:0] PWM_DUTY_CYCLE_7_0,
+    output reg[7:0] PWM_DUTY_CYCLE_7_0
 );
     
-    wire transaction_ready;
+    reg transaction_ready;
 
     //Transaction Register Selector
     always @(posedge clk or negedge rst_n) begin
@@ -67,7 +67,7 @@ module spi_peripheral(
     
     //Edge detection for nCS and SCLK
     assign SCLK_rising_edge = SCLK_sync2 & ~SCLK_sync1;
-    assign nCS_rising_edge = nCS_sync2 & ~nCS_sync2;
+    assign nCS_rising_edge = nCS_sync2 & ~nCS_sync1;
     assign nCS_falling_edge = ~nCS_sync2 & nCS_sync1;
 
 
@@ -77,9 +77,8 @@ module spi_peripheral(
         if(!rst_n) begin
             transaction_ready <= 1'b0;
         end else begin
-            if(counter == 16 && nCS_rising_edge) begin
+            if(counter == 15 && nCS_rising_edge) begin
                 transaction_ready <= 1'b1;
-                counter <= 4'b0;
             end else begin
                 transaction_ready <= 1'b0;
             end
@@ -97,19 +96,19 @@ module spi_peripheral(
                 shift_reg <= 16'b0;
                 counter <= 4'b0;
         end else if(!nCS_sync2 && SCLK_rising_edge) begin
-                shift_reg <= {data[14:0], COPI_sync2};
+                shift_reg <= {shift_reg[14:0], COPI_sync2};
                 counter <= counter + 4'd1; 
             end
         end
     end
 
       //Transaction Components
-    wire RW_Bit; //Read/Write bit
+    wire RW_BIT; //Read/Write bit
     wire [6:0] ADDR; //Address of register
     wire [7:0] DATA; //Serial Data
 
-    assign wire RW_BIT = shift_reg[15];
-    assign wire ADDR = shift_reg[14:8];
-    assign wire DATA = shift_reg[7:0];
+    assign RW_BIT = shift_reg[15];
+    assign ADDR = shift_reg[14:8];
+    assign DATA = shift_reg[7:0];
 
 endmodule
