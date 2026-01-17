@@ -75,26 +75,41 @@ module spi_peripheral(
     assign nCS_rising_edge = nCS_sync2 & ~nCS_sync2;
     assign nCS_falling_edge = ~nCS_sync2 & nCS_sync1;
 
+
     reg [3:0] counter;
     //Cycle Counter
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
-            counter <= 4'b0;
             transaction_ready <= 1'b0;
-        end else if(!nCS_sync2 && SCLK_rising_edge) begin
-            if(counter == 4'd15) begin
+        end else begin
+            if(counter == 16 && nCS_rising_edge) begin
                 transaction_ready <= 1'b1;
                 counter <= 4'b0;
             end else begin
                 transaction_ready <= 1'b0;
-                counter <= counter + 4'd1;
             end
-        end else begin
-            transaction_ready <= 1'b0;
-            counter <= 4'b0;
         end
     end
 
-    reg [15:0] register_shifter;
+    reg [15:0] shift_reg;
     //TODO: build register shifter
+    
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n) begin
+            shift_reg <= 16'b0;
+        end else begin
+            if(nCS_falling_edge) begin
+                shift_reg <= 16'b0;
+                counter <= 4'b0;
+        end else if(!nCS_sync2 && SCLK_rising_edge) begin
+                shift_reg <= {data[14:0], COPI_sync2};
+                counter <= counter + 4'd1; 
+            end
+        end
+    end
+
+    RW_BIT = shift_reg[15];
+    ADDR = shift_reg[14:8];
+    DATA = shift_reg[7:0];
+
 endmodule
