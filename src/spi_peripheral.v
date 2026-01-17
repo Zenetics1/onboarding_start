@@ -79,7 +79,7 @@ module spi_peripheral(
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             transaction_ready <= 1'b0;
-]        end else begin
+        end else begin
             if(counter == 15 && nCS_rising_edge) begin
                 transaction_ready <= 1'b1;
             end else begin
