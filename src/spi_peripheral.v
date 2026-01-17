@@ -92,8 +92,8 @@ module spi_peripheral(
     end
 
     reg [15:0] shift_reg;
-    //TODO: build register shifter
-    
+
+    //Shift Register Logic    
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             shift_reg <= 16'b0;
@@ -108,8 +108,8 @@ module spi_peripheral(
         end
     end
 
-    RW_BIT = shift_reg[15];
-    ADDR = shift_reg[14:8];
-    DATA = shift_reg[7:0];
+    assign RW_BIT = shift_reg[15];
+    assign ADDR = shift_reg[14:8];
+    assign DATA = shift_reg[7:0];
 
 endmodule
