@@ -3,8 +3,11 @@
 module spi_peripheral(
 
     //COPI:Raw Serial Data, nCS: Chip Select (Active low), SCLK: system clock for synchronization
-    input wire COPI, nCS, SCLK,
-    input wire rst_n, clk,
+    input wire COPI, 
+    input wire nCS, 
+    input wire SCLK,
+    input wire rst_n,
+    input wire clk,
 
     output reg[7:0] EN_OUT_7_0,
     output reg[7:0] EN_OUT_15_8,
@@ -76,11 +79,9 @@ module spi_peripheral(
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             transaction_ready <= 1'b0;
-            counter <= 4'b0;
-        end else begin
+]        end else begin
             if(counter == 15 && nCS_rising_edge) begin
                 transaction_ready <= 1'b1;
-                counter <= 4'b0;
             end else begin
                 transaction_ready <= 1'b0;
             end
