@@ -10,7 +10,6 @@ from cocotb.types import Logic
 from cocotb.types import LogicArray
 from cocotb.utils import get_sim_time
 from cocotb.triggers import with_timeout
-from cocotb.triggers import SimTimeoutError
 
 async def await_half_sclk(dut):
     """Wait for the SCLK signal to go high or low."""
@@ -188,7 +187,7 @@ async def test_pwm_freq(dut):
         dut._log.info("Wait for PWM out Rising Edge #2")
         await with_timeout(RisingEdge(dut.signal_out_bit0), 1, 'ms')
         t_rising_edge2 = get_sim_time(unit='ns')
-    except SimTimeoutError:
+    except cocotb.triggers.SimTimeoutError:
         assert False,f"Timeout Error occured: Signal is stuck"
 
     #Calculate period between two rising edges in ns
@@ -252,7 +251,7 @@ async def test_pwm_duty(dut):
                 dut._log.info("Wait for PWM out Rising Edge #2")
                 await with_timeout(RisingEdge(dut.signal_out_bit0), 2, 'ms')
                 t_rising_edge2 = get_sim_time(unit='ns')
-            except SimTimeoutError:
+            except cocotb.triggers.SimTimeoutError:
                 assert False,f"Timeout Error occured: Signal is stuck at {transaction}"
 
 
