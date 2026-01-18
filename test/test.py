@@ -9,7 +9,7 @@ from cocotb.triggers import ClockCycles
 from cocotb.types import Logic
 from cocotb.types import LogicArray
 from cocotb.utils import get_sim_time
-from cocotb.utils import with_timeout
+from cocotb.triggers import with_timeout
 
 async def await_half_sclk(dut):
     """Wait for the SCLK signal to go high or low."""
