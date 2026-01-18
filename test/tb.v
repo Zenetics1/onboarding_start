@@ -46,6 +46,7 @@ module tb ();
       .rst_n  (rst_n)     // not reset
   );
 
+  //Added to receive signals for DUT
   wire signal_out_bit0 = uo_out[0];
   wire [7:0] pwm_duty_cycle = user_project.pwm_duty_cycle;
 endmodule
