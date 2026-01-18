@@ -9,6 +9,8 @@ from cocotb.triggers import ClockCycles
 from cocotb.types import Logic
 from cocotb.types import LogicArray
 from cocotb.utils import get_sim_time
+from cocotb.triggers import with_timeout
+from cocotb.triggers import SimTimeoutError
 
 async def await_half_sclk(dut):
     """Wait for the SCLK signal to go high or low."""
@@ -176,17 +178,18 @@ async def test_pwm_freq(dut):
 
     await ClockCycles(dut.clk, 5)
 
-    dut.log.info("Wait for PWM out Rising Edge #1")
-    await RisingEdge(dut.uo_out[0])
-    t_rising_edge1 = get_sim_time(units='ns')
+    try:
+        dut._log.info("Wait for PWM out Rising Edge #1")
+        await with_timeout(RisingEdge(dut.signal_out_bit0), 1, 'ms')
+        t_rising_edge1 = get_sim_time(unit='ns')
 
-    await ClockCycles(dut.clk, 5)
+        await ClockCycles(dut.clk, 5)
 
-    dut.log.info("Wait for PWM out Rising Edge #2")
-    await RisingEdge(dut.uo_out[0])
-    t_rising_edge2 = get_sim_time(units='ns')
-
-    await ClockCycles(dut.clk, 5)
+        dut._log.info("Wait for PWM out Rising Edge #2")
+        await with_timeout(RisingEdge(dut.signal_out_bit0), 1, 'ms')
+        t_rising_edge2 = get_sim_time(unit='ns')
+    except SimTimeoutError:
+        assert False,f"Timeout Error occured: Signal is stuck"
 
     #Calculate period between two rising edges in ns
     period = t_rising_edge2 - t_rising_edge1
@@ -205,7 +208,6 @@ async def test_pwm_freq(dut):
 @cocotb.test()
 async def test_pwm_duty(dut):
     # Write your test here
-    # Write your test here
     clock = Clock(dut.clk, 100, 'ns')
 
     cocotb.start_soon(clock.start())
@@ -220,41 +222,48 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
-        
-    dut._log.info("Sending SPI transactions")
-    await send_spi_transaction(dut, 1, 0x00, 0x01)
-    await send_spi_transaction(dut, 1, 0x02, 0x01)
-    await send_spi_transaction(dut, 1, 0x04, 0x80)
+    
+    spi_transactions = [0x00, 0x80, 0xFF]
 
-    await ClockCycles(dut.clk, 5)
+    for transaction in spi_transactions:
+        dut._log.info("Sending SPI transactions")
+        await send_spi_transaction(dut, 1, 0x00, 0x01)
+        await send_spi_transaction(dut, 1, 0x02, 0x01)
+        await send_spi_transaction(dut, 1, 0x04, transaction)
 
-    if dut.pwm_duty_cycle == 0x00:
-        assert dut.uo_out[0].value == 0,f"PWM duty cycle signal is constant LOW"
-    elif dut.pwm_duty_cycle == 0xFF:
-        assert dut.uo_out[0].value == 1,f"PWM duty cycle signal is constant HIGH"
-    else:
-        expected_duty_cycle = 50
+        await ClockCycles(dut.clk, 10)
 
-        dut.log.info("Wait for PWM out Rising Edge #1")
-        await RisingEdge(dut.uo_out[0])
-        t_rising_edge1 = get_sim_time(units='ns')
-        
-        dut.log.info("Wait for PWM out Falling Edge")
-        await FallingEdge(dut.uo_out[0])
-        t_falling_edge = get_sim_time(units='ns')
+        if transaction == 0x00:
+            assert dut.signal_out_bit0.value == 0,f"PWM duty cycle signal should be constant LOW"
+        elif transaction == 0xFF:
+            assert dut.signal_out_bit0.value == 1,f"PWM duty cycle signal should be constant HIGH"
+        else:
+            expected_duty_cycle = 50
 
-        dut.log.info("Wait for PWM out Rising Edge #2")
-        await RisingEdge(dut.uo_out[0])
-        t_rising_edge2 = get_sim_time(units='ns')
+            try:
+                dut._log.info("Wait for PWM out Rising Edge #1")
+                await with_timeout(RisingEdge(dut.signal_out_bit0), 2, 'ms')
+                t_rising_edge1 = get_sim_time(unit='ns')
 
-        high_time = t_falling_edge - t_rising_edge1
+                dut._log.info("Wait for PWM out Falling Edge")
+                await with_timeout(FallingEdge(dut.signal_out_bit0), 2, 'ms')
+                t_falling_edge = get_sim_time(unit='ns')
 
-        period = t_rising_edge2 - t_rising_edge1
+                dut._log.info("Wait for PWM out Rising Edge #2")
+                await with_timeout(RisingEdge(dut.signal_out_bit0), 2, 'ms')
+                t_rising_edge2 = get_sim_time(unit='ns')
+            except SimTimeoutError:
+                assert False,f"Timeout Error occured: Signal is stuck at {transaction}"
 
-        duty_cycle = (high_time/period)*100
 
-        tolerance = 1.0
+            high_time = t_falling_edge - t_rising_edge1
 
-        assert abs(duty_cycle - expected_duty_cycle) <= tolerance,f"Duty cycle not expected value, got {duty_cycle}"
+            period = t_rising_edge2 - t_rising_edge1
 
-        dut._log.info("PWM Duty Cycle test completed successfully")
+            duty_cycle = (high_time/period)*100
+
+            tolerance = 1.0
+
+            assert abs(duty_cycle - expected_duty_cycle) <= tolerance,f"Duty cycle not expected value, got {duty_cycle}"
+
+            dut._log.info("PWM Duty Cycle test completed successfully")

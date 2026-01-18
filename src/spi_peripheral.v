@@ -15,7 +15,7 @@ module spi_peripheral(
     output reg[7:0] EN_PWM_MODE_15_8, 
     output reg[7:0] PWM_DUTY_CYCLE_7_0
 );
-    
+    reg [15:0] shift_reg;
     reg transaction_ready;
     //Transaction Components
     wire RW_BIT; //Read/Write bit
@@ -106,7 +106,6 @@ module spi_peripheral(
         end
     end
 
-    reg [15:0] shift_reg;
 
     assign RW_BIT = shift_reg[15];
     assign ADDR = shift_reg[14:8];
