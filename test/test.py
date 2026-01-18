@@ -224,6 +224,7 @@ async def test_pwm_duty(dut):
     
     spi_transactions = [0x00, 0x80, 0xFF]
 
+    #Test 0%, 50%, and 100% duty cycles
     for transaction in spi_transactions:
         dut._log.info("Sending SPI transactions")
         await send_spi_transaction(dut, 1, 0x00, 0x01)
