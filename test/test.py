@@ -194,9 +194,11 @@ async def test_pwm_freq(dut):
     #get frequency from period and covert from ns to s for proper comparision
     frequency = 1e9/period
 
-    expected
+    expected_frequency = 3000
 
-    assert frequency >= 2970 and frequency <= 3030,f"Frequency not within tolerance range, Expected 2970-3030, got {frequency}"
+    tolerance = 30
+
+    assert abs(expected_frequency - frequency) <= tolerance,f"Frequency not within tolerance range got {frequency}"
 
     dut._log.info("PWM Frequency test completed successfully")
 
@@ -251,6 +253,8 @@ async def test_pwm_duty(dut):
 
         duty_cycle = (high_time/period)*100
 
-        assert abs(duty_cycle - expected_duty_cycle) < 1.0,f"Duty cycle not expected value, got {duty_cycle}"
+        tolerance = 1.0
+
+        assert abs(duty_cycle - expected_duty_cycle) <= tolerance,f"Duty cycle not expected value, got {duty_cycle}"
 
         dut._log.info("PWM Duty Cycle test completed successfully")
