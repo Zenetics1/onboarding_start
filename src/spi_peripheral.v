@@ -17,7 +17,7 @@ module spi_peripheral(
 );
     
     reg transaction_ready;
-      //Transaction Components
+    //Transaction Components
     wire RW_BIT; //Read/Write bit
     wire [6:0] ADDR; //Address of register
     wire [7:0] DATA; //Serial Data
