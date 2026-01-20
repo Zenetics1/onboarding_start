@@ -94,14 +94,14 @@ module spi_peripheral(
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             shift_reg <= 16'b0;
-            counter <= 4'b0;
+            counter <= 5'b0;
         end else begin
             if(nCS_falling_edge) begin
                 shift_reg <= 16'b0;
-                counter <= 4'b0;
+                counter <= 5'b0;
             end else if(!nCS_sync2 && SCLK_rising_edge) begin
                 shift_reg <= {shift_reg[14:0], COPI_sync2};
-                counter <= counter + 4'd1; 
+                counter <= counter + 5'd1; 
             end
         end
     end
